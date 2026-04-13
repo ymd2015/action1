@@ -17,7 +17,7 @@ jobs:
       - name: Checkout core repository
         uses: actions/checkout@v4
         with:
-          repository: ymd2015/core1
+          repository: ${{ secrets.CORE_REPO }}
           token: ${{ secrets.CORE_REPO_PAT }}
           path: core
 
