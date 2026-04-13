@@ -2,8 +2,8 @@ name: Run core
 
 on:
   schedule:
-    # 毎日 00:00 UTC に実行。必要に応じて変更する。
-    - cron: "0 0 * * *"
+    # 平日 16:00 JST (7:00 UTC)
+    - cron: "0 7 * * 1-5"
   workflow_dispatch:
 
 jobs:
@@ -40,11 +40,27 @@ jobs:
       - name: Install dependencies
         run: pip install -r core/requirements.txt
 
-      # 4. run.py を実行
+      # 4. 祝日判定
+      - name: Check if holiday
+        run: |
+          python -c "
+          import jpholiday
+          from datetime import datetime, timezone
+          today = datetime.now(timezone.utc).date()
+          if jpholiday.is_holiday(today):
+              print('Today is a holiday, cancelling workflow')
+              exit(1)
+          else:
+              print('Today is not a holiday, proceeding')
+          "
+
+      # 5. run.py を実行
       - name: Run core/run.py
+        env:
+          CORE_SECRETS_LIST: ${{ secrets.CORE_SECRETS_LIST }}
         run: python core/run.py
 
-      # 5. artifact を保存
+      # 6. artifact を保存
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
