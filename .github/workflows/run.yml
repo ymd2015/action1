@@ -1,0 +1,54 @@
+name: Run core
+
+on:
+  schedule:
+    # 毎日 00:00 UTC に実行。必要に応じて変更する。
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read   # artifact のダウンロードに必要
+
+    steps:
+      # 1. core リポジトリをチェックアウト
+      - name: Checkout core repository
+        uses: actions/checkout@v4
+        with:
+          repository: <YOUR_GITHUB_USERNAME>/core
+          token: ${{ secrets.CORE_REPO_PAT }}
+          path: core
+
+      # 2. 最新の artifact を取得してフォルダに展開
+      - name: Download latest artifact
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: run.yml
+          name: core-artifact
+          path: core/artifact
+          if_no_artifact_found: warn   # 初回実行時は artifact がないため警告のみ
+
+      # 3. Python のセットアップと依存インストール
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r core/requirements.txt
+
+      # 4. run.py を実行
+      - name: Run core/run.py
+        run: python core/run.py
+
+      # 5. artifact を保存
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-artifact
+          path: core/artifact/
+          retention-days: 90
+          if-no-files-found: error
