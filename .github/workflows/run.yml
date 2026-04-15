@@ -63,6 +63,21 @@ jobs:
           CORE_SECRETS_LIST: ${{ secrets.CORE_SECRETS_LIST }}
         run: python core/run.py
 
+      # 5.5 デバッグ: pages フォルダを確認
+      - name: Debug - Check pages folder
+        run: |
+          if [ -d "core/pages" ]; then
+            echo "pages folder exists"
+            ls -la core/pages/
+          else
+            echo "ERROR: pages folder does not exist!"
+          fi
+          if [ -f "core/pages/index.html" ]; then
+            echo "index.html exists"
+          else
+            echo "ERROR: index.html does not exist!"
+          fi
+
       # 6. artifact を保存
       - name: Upload artifact
         uses: actions/upload-artifact@v4
