@@ -6,11 +6,14 @@ on:
     - cron: "0 7 * * 1-5"
   workflow_dispatch:
 
+permissions:
+  actions: read   # artifact のダウンロードに必要
+  pages: write
+  id-token: write
+
 jobs:
   run:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read   # artifact のダウンロードに必要
 
     steps:
       # 1. core リポジトリをチェックアウト
@@ -68,3 +71,19 @@ jobs:
           path: core/artifact/
           retention-days: 90
           if-no-files-found: error
+
+      # 7. pages を GitHub Pages に公開 (存在する場合)
+      - name: Setup Pages
+        if: hashFiles('core/pages/index.html') != ''
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: hashFiles('core/pages/index.html') != ''
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: core/pages/
+
+      - name: Deploy to GitHub Pages
+        if: hashFiles('core/pages/index.html') != ''
+        id: deployment
+        uses: actions/deploy-pages@v4
