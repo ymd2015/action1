@@ -61,7 +61,10 @@ jobs:
       - name: Run core/run.py
         env:
           CORE_SECRETS_LIST: ${{ secrets.CORE_SECRETS_LIST }}
-        run: python core/run.py
+        run: |
+          cd core
+          python run.py 2>&1 | tee run_output.log
+          echo "Run output saved to run_output.log"
 
       # 5.5 デバッグ: pages フォルダを確認
       - name: Debug - Check pages folder
@@ -76,6 +79,12 @@ jobs:
             echo "index.html exists"
           else
             echo "ERROR: index.html does not exist!"
+          fi
+          if [ -f "core/run_output.log" ]; then
+            echo "=== run.py output ==="
+            cat core/run_output.log
+          else
+            echo "ERROR: run_output.log does not exist!"
           fi
 
       # 6. artifact を保存
